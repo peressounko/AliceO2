@@ -13,6 +13,7 @@ o2_add_library(CPVWorkflow
                        src/PublisherSpec.cxx
                        src/ClusterizerSpec.cxx
                        src/DigitsPrinterSpec.cxx
+                       src/RawToDigitConverterSpec.cxx
                PUBLIC_LINK_LIBRARIES O2::Framework O2::DataFormatsCPV 
                                      O2::DPLUtils O2::CPVBase O2::CPVCalib O2::CPVSimulation O2::CPVReconstruction O2::Algorithm)
 

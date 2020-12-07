@@ -24,8 +24,8 @@
 #include "DataFormatsCPV/TriggerRecord.h"
 #include "CPVWorkflow/RecoWorkflow.h"
 #include "CPVWorkflow/ClusterizerSpec.h"
-#include "CPVWorkflow/DigitsPrinterSpec.h"
 #include "CPVWorkflow/PublisherSpec.h"
+#include "CPVWorkflow/RawToDigitConverterSpec.h"
 //#include "CPVWorkflow/RawWriterSpec.h"
 #include "Framework/DataSpecUtils.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
@@ -83,6 +83,14 @@ o2::framework::WorkflowSpec getWorkflow(bool propagateMC,
   //   specs.emplace_back(o2::cpv::reco_workflow::getRawWriterSpec());
   // }
 
+  if (inputType == InputType::Raw) {
+    //no explicit raw reader
+
+    if (isEnabled(OutputType::Digits)) {
+      specs.emplace_back(o2::cpv::reco_workflow::getRawToDigitConverterSpec());
+    }
+  }
+
   if (inputType == InputType::Digits) {
     specs.emplace_back(o2::cpv::getPublisherSpec(PublisherConf{
                                                    "cpv-digit-reader",
@@ -95,9 +103,9 @@ o2::framework::WorkflowSpec getWorkflow(bool propagateMC,
                                                    o2::framework::OutputSpec{"CPV", "DIGITSMCTR"}},
                                                  propagateMC));
 
-    if (enableDigitsPrinter) {
-      specs.emplace_back(o2::cpv::reco_workflow::getPhosDigitsPrinterSpec());
-    }
+    // if (enableDigitsPrinter) {
+    //   specs.emplace_back(o2::cpv::reco_workflow::getDigitsPrinterSpec());
+    // }
 
     if (isEnabled(OutputType::Clusters)) {
       // add clusterizer
@@ -128,54 +136,6 @@ o2::framework::WorkflowSpec getWorkflow(bool propagateMC,
     }
     return std::make_tuple(o2::framework::MakeRootTreeWriterSpec::TerminationCondition::Action::DoProcessing, false);
   };
-
-  // auto makeWriterSpec = [propagateMC, checkReady](const char* processName,
-  //                                                 const char* defaultFileName,
-  //                                                 const char* defaultTreeName,
-  //                                                 bool createMCMap,
-  //                                                 auto&& databranch,
-  //                                                 auto&& datatrbranch,
-  //                                                 auto&& mcbranch=nullptr,
-  //                                                 auto&& mcmapbranch=nullptr) {
-  //   // depending on the MC propagation flag, the RootTreeWriter spec is created with two
-  //   // or one branch definition
-  //   if (propagateMC) {
-  //     if(createMCMap){
-  //        return std::move(o2::framework::MakeRootTreeWriterSpec(processName, defaultFileName, defaultTreeName,
-  //                                                            o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
-  //                                                            std::move(databranch),
-  //                                                            std::move(datatrbranch),
-  //                                                            std::move(mcbranch),
-  //                                                            std::move(mcmapbranch)));
-  //     }
-  //     else{
-  //       return std::move(o2::framework::MakeRootTreeWriterSpec(processName, defaultFileName, defaultTreeName,
-  //                                                            o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
-  //                                                            std::move(databranch),
-  //                                                            std::move(datatrbranch),
-  //                                                            std::move(mcbranch)));
-  //    }
-  //   }
-  //   else{
-  //   return std::move(o2::framework::MakeRootTreeWriterSpec(processName, defaultFileName, defaultTreeName,
-  //                                                          o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
-  //                                                          std::move(databranch),
-  //                                                          std::move(datatrbranch)));
-  //   }
-  // };
-
-  // if (isEnabled(OutputType::Raw)) {
-  //   using RawOutputType = std::vector<o2::cpv::Raw>;
-  //   specs.push_back(makeWriterSpec("cpv-raw-writer",
-  //                                  inputType == InputType::Digits ? "cpv-raw.root" : "cpvrawcells.root",
-  //                                  "o2sim",
-  //                                  BranchDefinition<DigitOutputType>{o2::framework::InputSpec{"data", "CPV", "RAW", 0},
-  //                                                                    "CPVRaw",
-  //                                                                    "raw-branch-name"},
-  //                                  BranchDefinition<MCLabelContainer>{o2::framework::InputSpec{"mc", "CPV", "RAWMCTR", 0},
-  //                                                                     "CPVRawMCTruth",
-  //                                                                     "rawmc-branch-name"})());
-  // }
 
   if (isEnabled(OutputType::Digits)) {
     using DigitOutputType = std::vector<o2::cpv::Digit>;

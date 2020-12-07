@@ -28,8 +28,14 @@ class Geometry
   static constexpr short kNumberOfCPVPadsZ = 60;
   static constexpr float kCPVPadSizePhi = 1.13;
   static constexpr float kCPVPadSizeZ = 2.1093;
+  //for hwaddress
+  static constexpr short kNPAD = 48;   
+  static constexpr short kNDilogic = 10;   
+  static constexpr short kNRow = 16;   
+  static constexpr short kNDDL = 4;   
 
-  ///
+
+ ///
   /// Default constructor.
   Geometry() = default;
 
@@ -69,6 +75,9 @@ class Geometry
   static char absIdToModule(short absId);
   static void absIdToRelPosInModule(short absId, float& x, float& z);
   static bool relToAbsNumbering(const short* relId, short& absId);
+
+  static void hwaddressToAbsId(short ddl, short row, short dilogic, short hw, short &absId) ;
+  static void absIdToHWaddress(short absId, short &ddl, short &dilogic, short & row, short &hw) ;
 
   static int getTotalNPads() { return kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ * 3; }
   static bool IsPadExists(short absId)

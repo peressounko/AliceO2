@@ -9,6 +9,7 @@
 // or submit itself to any jurisdiction.
 
 #include "CPVBase/Geometry.h"
+#include "FairLogger.h"
 
 using namespace o2::cpv;
 
@@ -99,4 +100,50 @@ bool Geometry::relToAbsNumbering(const short* relId, short& absId)
     relId[1];                                                  // the offset along z
 
   return true;
+}
+void Geometry::hwaddressToAbsId(short ddl, short row, short dilog, short hw, short &absId){
+
+  short relid[3]={short(ddl+1),short(8*row+hw%6), short(6*dilog+hw/6)};
+
+  relToAbsNumbering(relid,absId);
+}
+
+void Geometry::absIdToHWaddress(short absId, short &ddl, short &row, short &dilogic, short &hw){
+  // Convert absId to hw address
+  // Arguments: w32,ddl,row,dilogic,address where to write the results
+
+
+  short relid[3] ;
+  absToRelNumbering(absId, relid) ;
+
+  ddl     = relid[0]-1;                           // DDL# 0..4
+  row     = (relid[1]-1)/8;                       // row# 0..16
+  dilogic = (relid[2]-1)/6;                       // Dilogic# 0..10
+  hw      = (relid[1]-1)%6 + 6*((relid[2]-1)%8);  // Address 0..47
+  
+  if(hw<0 || hw>kNPAD){
+    LOG(ERROR) << "Wrong hw address: hw=" <<  hw << " > kNPAD=" << kNPAD;
+    hw=0;
+    dilogic=0;
+    row=0;
+    ddl=0;
+    return ;
+  }
+  if(dilogic<0 || dilogic>kNDilogic){
+    LOG(ERROR) << "Wrong dilogic address: dilogic=" <<  dilogic << " > kNDilogic=" << kNDilogic;
+    hw=0;
+    dilogic=0;
+    row=0;
+    ddl=0;
+    return ;
+  }
+  if(row<0 || row>kNRow){
+    LOG(ERROR) << "Wrong row address: row=" <<  row << " > kNRow=" << kNRow;
+    hw=0;
+    dilogic=0;
+    row=0;
+    ddl=0;
+    return ;
+  }
+
 }
