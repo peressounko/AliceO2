@@ -31,7 +31,7 @@ union PadWord {
 union EoEWord {
   uint32_t mDataWord;
   struct {
-    uint32_t nword   : 7;  ///< Bits  0 - 6 : word counter (0...47)
+    uint32_t nword   : 7;   ///< Bits  0 - 6 : word counter (0...47)
     uint32_t en      : 11;  ///< Bits 7 - 17 : event number -- not used
     uint32_t dilogic : 4;   ///< Bits 18 - 21 : dilogic (1..10)
     uint32_t row     : 6;   ///< Bits 22 - 26 : raw     (1..24)
