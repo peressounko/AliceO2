@@ -118,56 +118,56 @@ o2::framework::WorkflowSpec getWorkflow(bool propagateMC,
     // }
   }
 
-  // check if the process is ready to quit
-  // this is decided upon the meta information in the CPV block header, the operation is set
-  // value kNoPayload in case of no data or no operation
-  // see also PublisherSpec.cxx
-  // in this workflow, the EOD is sent after the last real data, and all inputs will receive EOD,
-  // so it is enough to check on the first occurence
-  // FIXME: this will be changed once DPL can propagate control events like EOD
-  auto checkReady = [](o2::framework::DataRef const& ref) {
-    auto const* cpvheader = o2::framework::DataRefUtils::getHeader<o2::cpv::CPVBlockHeader*>(ref);
-    // sector number -1 indicates end-of-data
-    if (cpvheader != nullptr) {
-      // indicate normal processing if not ready and skip if ready
-      if (!cpvheader->mHasPayload) {
-        return std::make_tuple(o2::framework::MakeRootTreeWriterSpec::TerminationCondition::Action::SkipProcessing, true);
-      }
-    }
-    return std::make_tuple(o2::framework::MakeRootTreeWriterSpec::TerminationCondition::Action::DoProcessing, false);
-  };
+  // // check if the process is ready to quit
+  // // this is decided upon the meta information in the CPV block header, the operation is set
+  // // value kNoPayload in case of no data or no operation
+  // // see also PublisherSpec.cxx
+  // // in this workflow, the EOD is sent after the last real data, and all inputs will receive EOD,
+  // // so it is enough to check on the first occurence
+  // // FIXME: this will be changed once DPL can propagate control events like EOD
+  // auto checkReady = [](o2::framework::DataRef const& ref) {
+  //   auto const* cpvheader = o2::framework::DataRefUtils::getHeader<o2::cpv::CPVBlockHeader*>(ref);
+  //   // sector number -1 indicates end-of-data
+  //   if (cpvheader != nullptr) {
+  //     // indicate normal processing if not ready and skip if ready
+  //     if (!cpvheader->mHasPayload) {
+  //       return std::make_tuple(o2::framework::MakeRootTreeWriterSpec::TerminationCondition::Action::SkipProcessing, true);
+  //     }
+  //   }
+  //   return std::make_tuple(o2::framework::MakeRootTreeWriterSpec::TerminationCondition::Action::DoProcessing, false);
+  // };
 
-  if (isEnabled(OutputType::Digits)) {
-    using DigitOutputType = std::vector<o2::cpv::Digit>;
-    using DTROutputType = std::vector<o2::cpv::TriggerRecord>;
+  // if (isEnabled(OutputType::Digits)) {
+  //   using DigitOutputType = std::vector<o2::cpv::Digit>;
+  //   using DTROutputType = std::vector<o2::cpv::TriggerRecord>;
 
-    specs.emplace_back(o2::framework::MakeRootTreeWriterSpec("cpv-digits-writer", "cpvdigits.root", "o2sim",
-                                                             -1,
-                                                             o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
-                                                             BranchDefinition<DigitOutputType>{o2::framework::InputSpec{"data", "CPV", "DIGITS", 0},
-                                                                                               "CPVDigit",
-                                                                                               "digit-branch-name"},
-                                                             BranchDefinition<DTROutputType>{o2::framework::InputSpec{"data", "CPV", "DIGITTRIGREC", 0},
-                                                                                             "CPVDigTR",
-                                                                                             "digittr-branch-name"},
-                                                             BranchDefinition<MCLabelContainer>{o2::framework::InputSpec{"mc", "CPV", "DIGITSMCTR", 0},
-                                                                                                "CPVDigitMCTruth",
-                                                                                                "digitmc-branch-name"})());
-  }
+  //   specs.emplace_back(o2::framework::MakeRootTreeWriterSpec("cpv-digits-writer", "cpvdigits.root", "o2sim",
+  //                                                            -1,
+  //                                                            o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
+  //                                                            BranchDefinition<DigitOutputType>{o2::framework::InputSpec{"data", "CPV", "DIGITS", 0},
+  //                                                                                              "CPVDigit",
+  //                                                                                              "digit-branch-name"},
+  //                                                            BranchDefinition<DTROutputType>{o2::framework::InputSpec{"data", "CPV", "DIGITTRIGREC", 0},
+  //                                                                                            "CPVDigTR",
+  //                                                                                            "digittr-branch-name"},
+  //                                                            BranchDefinition<MCLabelContainer>{o2::framework::InputSpec{"mc", "CPV", "DIGITSMCTR", 0},
+  //                                                                                               "CPVDigitMCTruth",
+  //                                                                                               "digitmc-branch-name"})());
+  // }
 
-  if (isEnabled(OutputType::Clusters)) {
-    specs.emplace_back(o2::framework::MakeRootTreeWriterSpec("cpv-clusters-writer", "cpvclusters.root", "o2sim", -1,
-                                                             o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
-                                                             BranchDefinition<std::vector<o2::cpv::Cluster>>{o2::framework::InputSpec{"data", "CPV", "CLUSTERS", 0},
-                                                                                                             "CPVCluster",
-                                                                                                             "cluster-branch-name"},
-                                                             BranchDefinition<std::vector<o2::cpv::TriggerRecord>>{o2::framework::InputSpec{"datatr", "CPV", "CLUSTERTRIGRECS", 0},
-                                                                                                                   "CPVClusTR",
-                                                                                                                   "clustertr-branch-name"},
-                                                             BranchDefinition<o2::dataformats::MCTruthContainer<o2::MCCompLabel>>{o2::framework::InputSpec{"mc", "CPV", "CLUSTERTRUEMC", 0},
-                                                                                                                                  "CPVClusMC",
-                                                                                                                                  "clustermc-branch-name"})());
-  }
+  // if (isEnabled(OutputType::Clusters)) {
+  //   specs.emplace_back(o2::framework::MakeRootTreeWriterSpec("cpv-clusters-writer", "cpvclusters.root", "o2sim", -1,
+  //                                                            o2::framework::MakeRootTreeWriterSpec::TerminationCondition{checkReady},
+  //                                                            BranchDefinition<std::vector<o2::cpv::Cluster>>{o2::framework::InputSpec{"data", "CPV", "CLUSTERS", 0},
+  //                                                                                                            "CPVCluster",
+  //                                                                                                            "cluster-branch-name"},
+  //                                                            BranchDefinition<std::vector<o2::cpv::TriggerRecord>>{o2::framework::InputSpec{"datatr", "CPV", "CLUSTERTRIGRECS", 0},
+  //                                                                                                                  "CPVClusTR",
+  //                                                                                                                  "clustertr-branch-name"},
+  //                                                            BranchDefinition<o2::dataformats::MCTruthContainer<o2::MCCompLabel>>{o2::framework::InputSpec{"mc", "CPV", "CLUSTERTRUEMC", 0},
+  //                                                                                                                                 "CPVClusMC",
+  //                                                                                                                                 "clustermc-branch-name"})());
+  // }
 
   return std::move(specs);
 }

@@ -31,16 +31,18 @@ RawErrorType_t RawDecoder::decode()
   mDigits.clear() ;
 
   auto payloadwords = mRawReader.getPayload();
+printf("payload size=%d \n",payloadwords.size()) ;
+for(int iii=0; iii<payloadwords.size(); iii++){printf(", %d",payloadwords[iii]) ; }  printf("\n") ;
   if(payloadwords.size()==0){
     mErrors.emplace_back(ddl,0,0,0,kNO_PAYLOAD) ;//add error
     LOG(ERROR)<<"Empty payload for DDL="<<ddl ;
     return kNO_PAYLOAD; 
   }
 
-  if(readRCUTrailer()!=kOK){
-    LOG(ERROR) << "can not read RCU trailer for DDL " << ddl ;
-    return kRCU_TRAILER_ERROR;
-  }
+  // if(readRCUTrailer()!=kOK){
+  //   LOG(ERROR) << "can not read RCU trailer for DDL " << ddl ;
+  //   return kRCU_TRAILER_ERROR;
+  // }
 
   return readChannels();
 }
@@ -54,93 +56,89 @@ RawErrorType_t RawDecoder::readRCUTrailer()
 
 RawErrorType_t RawDecoder::readChannels()
 {
+printf("reading channels\n") ;  
   mChannelsInitialized = false;
   auto& header = mRawReader.getRawHeader();
   short ddl = o2::raw::RDHUtils::getFEEID(header); //Current fee/ddl
 
   auto &payloadwords = mRawReader.getPayload();  
-  auto currentword = payloadwords.begin();
-
-  while(currentword!=payloadwords.end()){
-    SegMarkerWord sw={*currentword} ;
+  //start reading from the end
+  auto currentWord=payloadwords.rbegin() ;
+  while(currentWord!=payloadwords.rend() ){
+    SegMarkerWord sw={*currentWord++}; //first get value, then increment
+printf("... Read Serments, sw=%d, nWords=%d \n",sw.mDataWord,sw.nwords) ;    
     if(sw.marker!=2736){ //error
+printf(".... ===>incorrect Segment: %d \n",sw.marker) ;        
       mErrors.emplace_back(ddl,17,2,0,kSEGMENT_HEADER_ERROR) ; //add error for non-existing row
-      currentword++ ; //Try to read words till next Segment or end of payload.
+      //try adding this as padWord
+      addDigit(sw.mDataWord,ddl) ;
       continue;
     }
     short nSegWords=sw.nwords;
     short currentRow=sw.row;
-    currentword++ ;
-    nSegWords--;
-    while(currentword!=payloadwords.end() && nSegWords>0){ //read rows
-      RowMarkerWord rw = {*currentword} ;
-      if(rw.marker!= 13992){ //error
-        mErrors.emplace_back(ddl,currentRow,11,0,kROW_HEADER_ERROR) ; //add error for non-existing dilogic
-        currentword++ ; //Try to read words till next Segment or end of payload.
-        nSegWords--;
-        continue ;
-      }
-      currentword++ ;
+    short nEoE=0;
+    while(nSegWords>0 && currentWord!=payloadwords.rend() ){
+      EoEWord ew ={*currentWord++} ;
       nSegWords--;
-      short nRowWords = rw.nwords;
-      while(currentword!=payloadwords.end() && nSegWords>0 && nRowWords>0){
-        EoEWord ew ={ *currentword} ;
-        if(ew.checkbit != 1){ //error
-          mErrors.emplace_back(ddl,currentRow,11,0,kEOE_HEADER_ERROR) ; //add error
-          //go to next EoE
-          currentword++ ; //Try to read words till next EoE or end of payload.
-          nSegWords--;
-          nRowWords--;
-          continue;
-        }
-        currentword++ ;
-        nSegWords--;
-        nRowWords--;
-        short currentDilogic = ew.dilogic;
-        if(ew.row!=currentRow){
-          mErrors.emplace_back(ddl,currentRow,currentDilogic,0,kEOE_HEADER_ERROR) ;//add error
-          //move to next EoE
-          currentword++ ; //Try to read words till next EoE or end of payload.
-          nSegWords--;
-          nRowWords--;
-          continue;
-        }
-        if(currentDilogic<0 || currentDilogic>10){
-          mErrors.emplace_back(ddl,currentRow,currentDilogic,0,kEOE_HEADER_ERROR) ; //add error
-          currentword++ ; //Try to read words till next EoE or end of payload.
-          nSegWords--;
-          nRowWords--;
-          continue;
-        }
-        for(short i=ew.nword; i>0 && currentword!=payloadwords.end() ; i--){
-          currentword++ ;
-          nSegWords--;
-
-          PadWord pad;
-          pad.mDataWord = *currentword ;
-          if(pad.zero!=0){
-            mErrors.emplace_back(ddl,currentRow,currentDilogic,49,kPADERROR); //add error and skip word
-            continue ;
-          }
-          //check paw/pad indexes
-          short rowPad = pad.row; 
-          short dilogicPad=pad.dilogic;
-          short hw=pad.address;
-          if(rowPad!=currentRow || dilogicPad!=currentDilogic){
-            mErrors.emplace_back(ddl,rowPad,dilogicPad,hw,kPadAddress) ; //add error and skip word
-            continue;
-          }
-          short absId; 
-          o2::cpv::Geometry::hwaddressToAbsId(ddl, rowPad, dilogicPad, hw, absId) ;
-          AddressCharge ac={0} ;
-          ac.Address = absId;
-          ac.Charge = pad.charge ;
-          mDigits.push_back(ac.mDataWord) ;
-        }  
+      if(ew.checkbit != 1){ //error
+printf(".........===>error EoE \n") ;        
+        mErrors.emplace_back(ddl,currentRow,11,0,kEOE_HEADER_ERROR) ; //add error
+        //try adding this as padWord
+        addDigit(ew.mDataWord,ddl) ;
+        continue;
       }
-    }
+      nEoE++;
+      short nEoEwords=ew.nword ;
+printf("..........EoE words=%d,SegW=%d\n",nEoEwords,nSegWords) ;        
+      short currentDilogic = ew.dilogic;
+      if(ew.row!=currentRow){
+printf("..........===>Row in EoE=%d != expected row %d\n",ew.row,currentRow) ;
+        mErrors.emplace_back(ddl,currentRow,currentDilogic,0,kEOE_HEADER_ERROR) ;//add error
+        //try adding this as padWord
+        addDigit(ew.mDataWord,ddl) ;
+        continue;
+      }
+      if(currentDilogic<0 || currentDilogic>10){
+printf("..........===>Dilogic in EoE=%d \n",currentDilogic) ;
+        mErrors.emplace_back(ddl,currentRow,currentDilogic,0,kEOE_HEADER_ERROR) ; //add error
+        //try adding this as padWord
+        addDigit(ew.mDataWord,ddl) ;
+        continue;
+      }
+      while(nEoEwords>0 && currentWord!=payloadwords.rend()){       
+        PadWord pad = {*currentWord++} ;
+        nEoEwords--;
+        nSegWords--;
+        if(pad.zero!=0){
+printf("            bad pad \n") ;            
+          mErrors.emplace_back(ddl,currentRow,currentDilogic,49,kPADERROR); //add error and skip word
+          continue ;
+        }
+        //check paw/pad indexes
+        if(pad.row!=currentRow || pad.dilogic!=currentDilogic){
+printf("==>RawPad  %d!=%d, dilogicPad=%d != currentDilogic=%d \n",pad.row,currentRow,pad.dilogic,currentDilogic) ;      
+          mErrors.emplace_back(ddl,short(pad.row),short(pad.dilogic),short(pad.address),kPadAddress) ; //add error and skip word
+          //do not skip, try adding using info from pad
+        }
+        addDigit(pad.mDataWord,ddl) ;
+      } //pads in EoE 
+printf("nEoE=%d \n",nEoE) ;      
+      if(nEoE%10==0){ // kNDilogic = 10;   ///< Number of dilogic per row 
+        if(currentWord!=payloadwords.rend()){ //Read row HEader
+          RowMarkerWord rw={*currentWord++} ;
+          nSegWords--;
+          currentRow--;
+printf("Read Row header: rw=%d, mark=%d =? 13992\n",rw.mDataWord,rw.marker) ;        
+          if(rw.marker!=13992){
+printf("   ===>Error in row=%d marker: %d \n",rw.mDataWord, rw.marker) ;            
+           mErrors.emplace_back(ddl,currentRow,11,0,kPadAddress) ; //add error and skip word
+           //try adding digit assuming this is pad word
+           addDigit(rw.mDataWord,ddl) ;
+          }
+        }
+      }
+    } // in Segment
   }
-
   mChannelsInitialized = true;
 }
 
@@ -157,4 +155,26 @@ const std::vector<uint32_t>& RawDecoder::getDigits() const
   if (!mChannelsInitialized)
     LOG(ERROR) << "Channels not initialized" ;
   return mDigits;
+}
+
+void RawDecoder::addDigit(uint32_t w, short ddl){
+  
+  PadWord pad = {w} ;
+  if(pad.zero!=0){
+    return ;
+  }
+  short rowPad = pad.row; 
+  short dilogicPad=pad.dilogic;
+  short hw=pad.address;
+  unsigned short absId; 
+  o2::cpv::Geometry::hwaddressToAbsId(ddl, rowPad, dilogicPad, hw, absId) ;
+if(absId>30720){
+printf("ADDRESS: ddl=%d, row=%d, dil=%d, hw=%d, absId=%d \n",ddl, rowPad, dilogicPad, hw, absId) ; 
+}
+
+  AddressCharge ac={0} ;
+  ac.Address = absId;
+  ac.Charge = pad.charge ;
+  mDigits.push_back(ac.mDataWord) ;
+ 
 }

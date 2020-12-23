@@ -82,8 +82,11 @@ RawErrorType_t RawReaderMemory::next()
     }
     // Check if the data continues
   } while (!isDataTerminated);
-  // add combined trailer to payload
-  mRawPayload.insert(mRawPayload.end(),mCurrentTrailer.encode().begin(),mCurrentTrailer.encode().end()); 
+  try {
+    mCurrentTrailer.constructFromPayloadWords(mRawPayload);
+  } catch (...) {
+    return RawErrorType_t::kHEADER_DECODING;
+  }  
   return RawErrorType_t::kOK;  
 }
 
@@ -94,10 +97,12 @@ RawErrorType_t RawReaderMemory::nextPage()
   }
   mRawHeaderInitialized = false;
   mPayloadInitialized = false;
-  // Read header
+
+  // Read RDH header
   try {
     mRawHeader = decodeRawHeader(mRawMemoryBuffer.data() + mCurrentPosition);
-    if (RDHDecoder::getOffsetToNext(mRawHeader) == RDHDecoder::getHeaderSize(mRawHeader)) {
+    while (RDHDecoder::getOffsetToNext(mRawHeader) == RDHDecoder::getHeaderSize(mRawHeader) &&
+           mCurrentPosition < mRawMemoryBuffer.size()) {
       // No Payload - jump to next rawheader
       // This will eventually move, depending on whether for events without payload in the SRU we send the RCU trailer
       mCurrentPosition += RDHDecoder::getHeaderSize(mRawHeader);
@@ -110,65 +115,29 @@ RawErrorType_t RawReaderMemory::nextPage()
   if (mCurrentPosition + RDHDecoder::getMemorySize(mRawHeader) > mRawMemoryBuffer.size()) {
     // Payload incomplete
     return RawErrorType_t::kPAYLOAD_DECODING;
-  } else {
+  } 
 
-//    mRawBuffer.readFromMemoryBuffer(gsl::span<const char>(mRawMemoryBuffer.data() + mCurrentPosition + RDHDecoder::getHeaderSize(mRawHeader), RDHDecoder::getMemorySize(mRawHeader) - RDHDecoder::getHeaderSize(mRawHeader)));
-    auto rawBuffer = mRawMemoryBuffer.subspan(mCurrentPosition + RDHDecoder::getHeaderSize(mRawHeader),RDHDecoder::getMemorySize(mRawHeader) - RDHDecoder::getHeaderSize(mRawHeader));
+  auto tmp = reinterpret_cast<const uint32_t*>(mRawMemoryBuffer.data());
+  int start = (mCurrentPosition + RDHDecoder::getHeaderSize(mRawHeader))/sizeof(uint32_t);
+  int end   = start + (RDHDecoder::getMemorySize(mRawHeader) - RDHDecoder::getHeaderSize(mRawHeader))/sizeof(uint32_t);
+  for (auto iword = start; iword < end; iword++) {
+    mRawPayload.push_back(tmp[iword]);  
+  }
 
-    // Read off and chop trailer
-    //
-    // Every page gets a trailer. The trailers from the single pages need to be removed.
-    // There will be a combined trailer which keeps the sum of the payloads for all trailers.
-    // This will be appended to the chopped payload.
-    int tralersize = 0;
-    if (!mCurrentTrailer.isInitialized()) {
-      try {
-        mCurrentTrailer.constructFromPayload(rawBuffer);
-      } catch (...) {
-        return RawErrorType_t::kHEADER_DECODING;
-      }
-      tralersize = mCurrentTrailer.getTrailerSize();
-    } else {
-      RCUTrailer trailer;
-      try {
-        trailer.constructFromPayload(rawBuffer);
-      } catch (...) {
-        return RawErrorType_t::kHEADER_INVALID;
-      }
 
+  mCurrentPosition += RDHDecoder::getOffsetToNext(mRawHeader); /// Assume fixed 8 kB page size
+/*
       mCurrentTrailer.setPayloadSize(mCurrentTrailer.getPayloadSize() + trailer.getPayloadSize());
       tralersize = trailer.getTrailerSize();
     }
 
-    gsl::span<const uint32_t> payloadWithoutTrailer(reinterpret_cast<const uint32_t*>(rawBuffer.data()), (rawBuffer.size() - tralersize)/ sizeof(uint32_t));
+    gsl::span<const uint32_t> payloadWithoutTrailer(mRawBuffer.getDataWords().data(), mRawBuffer.getDataWords().size() - tralersize);
 
-    mRawPayload.insert(mRawPayload.end(),payloadWithoutTrailer.begin(),payloadWithoutTrailer.end());
+    mRawPayload.appendPayloadWords(payloadWithoutTrailer);
+    mRawPayload.increasePageCount();
   }
   mCurrentPosition += RDHDecoder::getOffsetToNext(mRawHeader); /// Assume fixed 8 kB page size
+*/
   return RawErrorType_t::kOK;
 }
-
-// RawErrorType_t RawReaderMemory::readPage(int page)
-// {
-//   int currentposition = 8192 * page;
-//   if (currentposition >= mRawMemoryBuffer.size()) {
-//     return RawErrorType_t::PAGE_NOTFOUND;
-//   }
-//   mRawHeaderInitialized = false;
-//   mPayloadInitialized = false;
-//   // Read header
-//   try {
-//     mRawHeader = decodeRawHeader(mRawMemoryBuffer.data() + mCurrentPosition);
-//     mRawHeaderInitialized = true;
-//   } catch (...) {
-//     return RawErrorType_t::HEADER_DECODING;
-//   }
-//   if (currentposition + RDHDecoder::getHeaderSize(mRawHeader) + RDHDecoder::getMemorySize(mRawHeader) >= mRawMemoryBuffer.size()) {
-//     // Payload incomplete
-//     return RawErrorType_t::PAYLOAD_DECODING;
-//   } else {
-//     mRawBuffer.readFromMemoryBuffer(gsl::span<const char>(mRawMemoryBuffer.data() + currentposition + RDHDecoder::getHeaderSize(mRawHeader), RDHDecoder::getMemorySize(mRawHeader)));
-//   }
-//   return RawErrorType_t::kOK;
-// }
 

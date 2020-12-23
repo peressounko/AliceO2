@@ -61,7 +61,6 @@ class RawToDigitConverterSpec : public framework::Task
   char CheckHWAddress(short ddl, short hwAddress, short& fee);
 
  private:
-  bool mPedestalRun = false;                                  ///< Analyze pedestal run (calculate pedestal mean and RMS)
   BadChannelMap * mBadMap = nullptr; 
   CalibParams   * mCalibParams = nullptr; 
   short mZSThreshold = 0;                                    ///< ZeroSuppression threshold in ADC counts

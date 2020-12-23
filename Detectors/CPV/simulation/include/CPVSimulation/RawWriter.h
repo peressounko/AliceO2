@@ -50,7 +50,7 @@ struct padCharge {
 
 struct SRUDigitContainer {
   short mSRUid;
-  std::map<short, std::vector<o2::cpv::Digit*>> mChannels;
+  std::map<unsigned short, std::vector<o2::cpv::Digit*>> mChannels;
 };
 
 class RawWriter

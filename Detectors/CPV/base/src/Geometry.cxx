@@ -15,34 +15,36 @@ using namespace o2::cpv;
 
 ClassImp(Geometry);
 
-short Geometry::relToAbsId(char moduleNumber, int iphi, int iz)
+unsigned short Geometry::relToAbsId(short moduleNumber, short iphi, short iz)
 {
   //converts module number, phi and z coordunates to absId
   return kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ * (moduleNumber - 1) + kNumberOfCPVPadsZ * (iz - 1) + iphi;
 }
 
-bool Geometry::absToRelNumbering(short absId, short* relid)
+bool Geometry::absToRelNumbering(unsigned short absId, short* relid)
 {
   // Converts the absolute numbering into the following array
   //  relid[0] = CPV Module number 1:fNModules
   //  relid[1] = Column number inside a CPV module (Phi coordinate)
   //  relid[2] = Row number inside a CPV module (Z coordinate)
 
-  short nCPV = kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ;
-  relid[0] = (absId - 1) / nCPV + 1;
+  const short nCPV = kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ;
+  absId-=1; //start from 0 not 1 
+  relid[0] = absId / nCPV + 1;
   absId -= (relid[0] - 1) * nCPV;
-  relid[2] = absId / kNumberOfCPVPadsZ + 1;
-  relid[1] = absId - (relid[2] - 1) * kNumberOfCPVPadsZ;
+  relid[1] = absId / kNumberOfCPVPadsZ + 1;
+  relid[2] = absId + 1 - (relid[1] - 1) * kNumberOfCPVPadsZ;
 
   return true;
+
 }
-char Geometry::absIdToModule(short absId)
+short Geometry::absIdToModule(unsigned short absId)
 {
 
   return 1 + (absId - 1) / (kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ);
 }
 
-int Geometry::areNeighbours(short absId1, short absId2)
+short Geometry::areNeighbours(unsigned short absId1, unsigned short absId2)
 {
 
   // Gives the neighbourness of two digits = 0 are not neighbour but continue searching
@@ -81,7 +83,7 @@ int Geometry::areNeighbours(short absId1, short absId2)
   }
   return 0;
 }
-void Geometry::absIdToRelPosInModule(short absId, float& x, float& z)
+void Geometry::absIdToRelPosInModule(unsigned short absId, float& x, float& z)
 {
   //Calculate from absId of a cell its position in module
 
@@ -91,24 +93,24 @@ void Geometry::absIdToRelPosInModule(short absId, float& x, float& z)
   x = (relid[1] - kNumberOfCPVPadsPhi / 2 - 0.5) * kCPVPadSizePhi;
   z = (relid[2] - kNumberOfCPVPadsZ / 2 - 0.5) * kCPVPadSizeZ;
 }
-bool Geometry::relToAbsNumbering(const short* relId, short& absId)
+bool Geometry::relToAbsNumbering(const short* relId, unsigned short & absId)
 {
 
   absId =
     (relId[0] - 1) * kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ + // the offset of PHOS modules
-    (relId[2] - 1) * kNumberOfCPVPadsZ +                       // the offset along phi
-    relId[1];                                                  // the offset along z
+    (relId[1] - 1) * kNumberOfCPVPadsZ +                       // the offset along phi
+    relId[2];                                                  // the offset along z
 
   return true;
 }
-void Geometry::hwaddressToAbsId(short ddl, short row, short dilog, short hw, short &absId){
+void Geometry::hwaddressToAbsId(short ddl, short row, short dilog, short hw, unsigned short &absId){
 
-  short relid[3]={short(ddl+1),short(8*row+hw%6), short(6*dilog+hw/6)};
+  short relid[3]={short(ddl+1),short(8*row+hw%6+1), short(6*dilog+hw/6+1)};
 
   relToAbsNumbering(relid,absId);
 }
 
-void Geometry::absIdToHWaddress(short absId, short &ddl, short &row, short &dilogic, short &hw){
+void Geometry::absIdToHWaddress(unsigned short absId, short &ddl, short &row, short &dilogic, short &hw){
   // Convert absId to hw address
   // Arguments: w32,ddl,row,dilogic,address where to write the results
 

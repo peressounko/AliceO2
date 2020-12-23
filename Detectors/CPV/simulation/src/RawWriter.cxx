@@ -25,8 +25,8 @@ using namespace o2::cpv;
 void RawWriter::init()
 {
   mRawWriter = std::make_unique<o2::raw::RawFileWriter>(o2::header::gDataOriginCPV, false);
-  mRawWriter->setCarryOverCallBack(this);
-  mRawWriter->setApplyCarryOverToLastPage(true);
+  // mRawWriter->setCarryOverCallBack(this);
+  mRawWriter->setApplyCarryOverToLastPage(false);
 
   // initialize containers for SRU
   for (auto isru = 0; isru < o2::cpv::Geometry::kNDDL; isru++) {
@@ -34,6 +34,17 @@ void RawWriter::init()
     srucont.mSRUid = isru;
     mSRUdata.push_back(srucont);
   }
+    
+  // Set output file and register link
+  std::string rawfilename = mOutputLocation;
+  rawfilename += "/cpv.raw";
+  
+  for(int ddl=0; ddl<kNDDL; ddl++){
+    short crorc=0, link=ddl;
+    mRawWriter->registerLink(ddl, crorc, link, 0, rawfilename.data());
+  }
+
+
 }
 
 void RawWriter::digitsToRaw(gsl::span<o2::cpv::Digit> digitsbranch, gsl::span<o2::cpv::TriggerRecord> triggerbranch)
@@ -109,7 +120,7 @@ bool RawWriter::processTrigger(const gsl::span<o2::cpv::Digit> digitsbranch, con
         if(charge>2047)charge=2047;
         short ddl, dilogic, row,hw;
         o2::cpv::Geometry::absIdToHWaddress(dig->getAbsId(), ddl, dilogic, row, hw ) ;
-
+printf("absId=%d, [ddl=%d,row=%d,dil=%d] hw=%d \n",dig->getAbsId(), ddl, dilogic, row, hw ) ;
         mPadCharge[ddl][row][dilogic].emplace_back(charge,hw) ;
       }
     }
@@ -130,16 +141,24 @@ bool RawWriter::processTrigger(const gsl::span<o2::cpv::Digit> digitsbranch, con
       int nwRow=0;
       for(Int_t dilogic = 0; dilogic < kNDilogic; dilogic++){
         int nPad = 0;
+if(mPadCharge[ddl][row][dilogic].size()>48){
+for(padCharge & pc: mPadCharge[ddl][row][dilogic]){
+printf("list: [ddl=%d,row=%d,dil=%d] hw=%d \n",ddl,row,dilogic,pc.pad);
+}
+printf("===========\n") ;
+}        
         for(padCharge & pc: mPadCharge[ddl][row][dilogic]){
           PadWord currentword = {0};          
           currentword.charge = pc.charge;
           currentword.address = pc.pad;
+          currentword.dilogic = dilogic ;
           currentword.row = row;
           mPayload.push_back(currentword.mDataWord);
           nwInSegment++;
           nPad++ ;
           nwRow++;
         }
+printf("Filling EoE: (row=%d, dil=%d), nwEoE=%d, payload=%d\n",row,dilogic,nPad,mPayload.size()) ;        
         EoEWord we = {0};
         we.nword= nPad;  
         we.dilogic = dilogic ;
@@ -149,12 +168,13 @@ bool RawWriter::processTrigger(const gsl::span<o2::cpv::Digit> digitsbranch, con
         nwInSegment++;        
         nwRow++;
       }
-      if(row%8==0){  // Why %8 ???
+      if(row%8==7){  
         SegMarkerWord w={0};
         w.row=row;
         w.nwords=nwInSegment;
         w.marker=2736;
         mPayload.push_back(w.mDataWord);
+printf(" Serment word=%d, nw=%d, payload=%d \n",w,nwInSegment,mPayload.size()) ;        
         nwInSegment=0;
         nwRow++;
       }
@@ -162,50 +182,57 @@ bool RawWriter::processTrigger(const gsl::span<o2::cpv::Digit> digitsbranch, con
       RowMarkerWord wr={0};
       wr.marker = 13992 ;
       wr.nwords = nwRow-1;
+printf(" Row word=%d \n",wr) ;        
       mPayload[posRowMarker]=wr.mDataWord;
     }
+ 
+
     //rewrite header with size set to or trailer will be added by framework?
 //    header.fSize=sizeof(header)+cntL*sizeof(w32); ddlL->Seekp(0); ddlL->WriteBuffer((char*)&header,sizeof(header)); delete ddlL;
   
     // register output data
     LOG(DEBUG1) << "Adding payload with size " << mPayload.size() << " (" << mPayload.size() / 4 << " ALTRO words)";
 
-    short crorc=0, link=0;
+printf("payload size=%d \n",mPayload.size()) ;
+for(int iii=0; iii<mPayload.size(); iii++){printf(", %d",mPayload[iii]) ; }  
+
+
+    short crorc=0, link=ddl;
     mRawWriter->addData(ddl, crorc, link, 0, trg.getBCData(), gsl::span<char>(reinterpret_cast<char*>(mPayload.data()),mPayload.size()*sizeof(uint32_t)));
   }
   return true;
 }
 
-int RawWriter::carryOverMethod(const header::RDHAny* rdh, const gsl::span<char> data,
-                               const char* ptr, int maxSize, int splitID,
-                               std::vector<char>& trailer, std::vector<char>& header) const
-{
-  int offs = ptr - &data[0]; // offset wrt the head of the payload
-  // make sure ptr and end of the suggested block are within the payload
-  assert(offs >= 0 && size_t(offs + maxSize) <= data.size());
+// int RawWriter::carryOverMethod(const header::RDHAny* rdh, const gsl::span<char> data,
+//                                const char* ptr, int maxSize, int splitID,
+//                                std::vector<char>& trailer, std::vector<char>& header) const
+// {
+//   int offs = ptr - &data[0]; // offset wrt the head of the payload
+//   // make sure ptr and end of the suggested block are within the payload
+//   assert(offs >= 0 && size_t(offs + maxSize) <= data.size());
 
-  // Read trailer template from the end of payload
-  // gsl::span<const uint32_t> payloadwords(reinterpret_cast<const uint32_t*>(data.data()), data.size() / sizeof(uint32_t));
-  auto rcutrailer = RCUTrailer::constructFromPayload(data);
+//   // Read trailer template from the end of payload
+//   // gsl::span<const uint32_t> payloadwords(reinterpret_cast<const uint32_t*>(data.data()), data.size() / sizeof(uint32_t));
+//   auto rcutrailer = RCUTrailer::constructFromPayload(data);
 
-  int sizeNoTrailer = maxSize - rcutrailer.getTrailerSize() * sizeof(uint32_t);
-  // calculate payload size for RCU trailer:
-  // assume actualsize is in byte
-  // Payload size is defined as the number of 32-bit payload words
-  // -> actualSize to be converted to size of 32 bit words
-  auto payloadsize = sizeNoTrailer / sizeof(uint32_t);
-  rcutrailer.setPayloadSize(payloadsize);
-  auto trailerwords = rcutrailer.encode();
-  trailer.resize(trailerwords.size() * sizeof(uint32_t));
-  memcpy(trailer.data(), trailerwords.data(), trailer.size());
-  // Size to return differs between intermediate pages and last page
-  // - intermediate page: Size of the trailer needs to be removed as the trailer gets appended
-  // - last page: Size of the trailer needs to be included as the trailer gets replaced
-  int bytesLeft = data.size() - (ptr - &data[0]);
-  bool lastPage = bytesLeft <= maxSize;
-  int actualSize = maxSize;
-  if (!lastPage) {
-    actualSize = sizeNoTrailer;
-  }
-  return actualSize;
-}
+//   int sizeNoTrailer = maxSize - rcutrailer.getTrailerSize() * sizeof(uint32_t);
+//   // calculate payload size for RCU trailer:
+//   // assume actualsize is in byte
+//   // Payload size is defined as the number of 32-bit payload words
+//   // -> actualSize to be converted to size of 32 bit words
+//   auto payloadsize = sizeNoTrailer / sizeof(uint32_t);
+//   rcutrailer.setPayloadSize(payloadsize);
+//   auto trailerwords = rcutrailer.encode();
+//   trailer.resize(trailerwords.size() * sizeof(uint32_t));
+//   memcpy(trailer.data(), trailerwords.data(), trailer.size());
+//   // Size to return differs between intermediate pages and last page
+//   // - intermediate page: Size of the trailer needs to be removed as the trailer gets appended
+//   // - last page: Size of the trailer needs to be included as the trailer gets replaced
+//   int bytesLeft = data.size() - (ptr - &data[0]);
+//   bool lastPage = bytesLeft <= maxSize;
+//   int actualSize = maxSize;
+//   if (!lastPage) {
+//     actualSize = sizeNoTrailer;
+//   }
+//   return actualSize;
+// }

@@ -61,7 +61,7 @@ class Geometry
   //         = 1 are neighbour
   //         = 2 are not neighbour but do not continue searching
   //         =-1 are not neighbour, continue searching, but do not look before d2 next time
-  static int areNeighbours(short absId1, short absId2);
+  static short areNeighbours(unsigned short absId1, unsigned short absId2);
 
   ///
   /// \return AbsId index of the CPV cell
@@ -70,17 +70,17 @@ class Geometry
   /// \param strip: strip number
   //  \param cell: cell in strip number
   ///
-  static short relToAbsId(char moduleNumber, int iphi, int iz);
-  static bool absToRelNumbering(short absId, short* relid);
-  static char absIdToModule(short absId);
-  static void absIdToRelPosInModule(short absId, float& x, float& z);
-  static bool relToAbsNumbering(const short* relId, short& absId);
+  static unsigned short relToAbsId(short moduleNumber, short iphi, short iz);
+  static bool absToRelNumbering(unsigned short absId, short* relid);
+  static short absIdToModule(unsigned short absId);
+  static void absIdToRelPosInModule(unsigned short absId, float& x, float& z);
+  static bool relToAbsNumbering(const short* relId, unsigned short& absId);
 
-  static void hwaddressToAbsId(short ddl, short row, short dilogic, short hw, short &absId) ;
-  static void absIdToHWaddress(short absId, short &ddl, short &dilogic, short & row, short &hw) ;
+  static void hwaddressToAbsId(short ddl, short row, short dilogic, short hw, unsigned short &absId) ;
+  static void absIdToHWaddress(unsigned short absId, short &ddl, short &dilogic, short & row, short &hw) ;
 
-  static int getTotalNPads() { return kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ * 3; }
-  static bool IsPadExists(short absId)
+  static unsigned short getTotalNPads() { return kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ * 4; }
+  static bool IsPadExists(unsigned short absId)
   {
     return absId > 0 && absId <= getTotalNPads();
   } // TODO: evaluate from real geometry

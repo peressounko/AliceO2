@@ -108,6 +108,8 @@ class RawDecoder
   /// In case of failure an exception is thrown.
   void checkRCUTrailer();
 
+  void addDigit(uint32_t padWord,short ddl); 
+
   RawReaderMemory& mRawReader;              ///< underlying raw reader
   RCUTrailer mRCUTrailer;                   ///< RCU trailer
   std::vector<uint32_t> mDigits;            ///< vector of channels in the raw stream
