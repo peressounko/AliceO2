@@ -35,6 +35,18 @@ class Geometry
   static constexpr short kNDDL = 4;   
 
 
+  /// Available numbering schems:
+  /// relative pad coordinates
+  /// relId[3]={Module, phi col, z row} where Module=1..3, phi col=0..127, z row=0..59
+  /// Absolute pad coordunate
+  /// absId=0..128*60*3=23040
+  /// Raw addresses:
+  /// DDL corresponds to one module: ddl=Module-1
+  /// each module consist of 16 columns of width 8 pads: row=0..15
+  /// Each column consists of 10 dilogics (in z direction) dilogic=0...9
+  /// Ecah dilogic contains 8*6 pads: hwaddress=0...48
+
+
  ///
   /// Default constructor.
   Geometry() = default;
@@ -77,7 +89,7 @@ class Geometry
   static bool relToAbsNumbering(const short* relId, unsigned short& absId);
 
   static void hwaddressToAbsId(short ddl, short row, short dilogic, short hw, unsigned short &absId) ;
-  static void absIdToHWaddress(unsigned short absId, short &ddl, short &dilogic, short & row, short &hw) ;
+  static void absIdToHWaddress(unsigned short absId, short &ddl, short &row, short &dilogic, short &hw);
 
   static unsigned short getTotalNPads() { return kNumberOfCPVPadsPhi * kNumberOfCPVPadsZ * 4; }
   static bool IsPadExists(unsigned short absId)

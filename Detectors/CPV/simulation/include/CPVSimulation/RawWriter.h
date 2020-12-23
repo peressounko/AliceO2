@@ -48,11 +48,6 @@ struct padCharge {
       {} //for std::vector::emplace_back functionality
 };
 
-struct SRUDigitContainer {
-  short mSRUid;
-  std::map<unsigned short, std::vector<o2::cpv::Digit*>> mChannels;
-};
-
 class RawWriter
 {
  public:
@@ -82,10 +77,9 @@ class RawWriter
   std::vector<padCharge> mPadCharge[kNDDL][kNRow][kNDilogic];    ///< list of signals per event
   FileFor_t mFileFor = FileFor_t::kFullDet;           ///< Granularity of the output files
   std::string mOutputLocation = "./";                 ///< Rawfile name
-  const CalibParams* mCalibParams = nullptr;          ///< CPV calibration
+  std::unique_ptr<CalibParams> mCalibParams ;         ///< CPV calibration
   std::vector<uint32_t> mPayload;                     ///< Payload to be written
   gsl::span<o2::cpv::Digit> mDigits;                  ///< Digits input vector - must be in digitized format including the time response
-  std::vector<SRUDigitContainer> mSRUdata;            ///< Internal helper of digits assigned to SRUs
   std::unique_ptr<o2::raw::RawFileWriter> mRawWriter; ///< Raw writer
 
   ClassDefNV(RawWriter, 1);

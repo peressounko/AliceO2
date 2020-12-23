@@ -100,12 +100,9 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
   //   kPadAddress
   // };
 
-printf("In raw data \n") ;
-
     o2::cpv::RawReaderMemory rawreader(o2::framework::DataRefUtils::as<const char>(rawData));
     // loop over all the DMA pages
     while (rawreader.hasNext()) {
-printf("...hasNext \n") ;      
       try {
         rawreader.next();
       } catch (RawErrorType_t e) {
@@ -126,7 +123,6 @@ printf("...hasNext \n") ;
       auto triggerOrbit = o2::raw::RDHUtils::getTriggerOrbit(header);
       auto ddl = o2::raw::RDHUtils::getFEEID(header);
 
-printf("   ddl=%d, header=%d \n",ddl, header) ;
       o2::InteractionRecord currentIR(triggerBC, triggerOrbit);
       std::shared_ptr<std::vector<o2::cpv::Digit>> currentDigitContainer;
       auto found = digitBuffer.find(currentIR);
@@ -136,7 +132,6 @@ printf("   ddl=%d, header=%d \n",ddl, header) ;
       } else {
         currentDigitContainer = found->second;
       }
-printf("    found buffer \n") ;      
       //
       if (ddl > o2::cpv::Geometry::kNDDL) { //only 4 correct DDLs
         LOG(ERROR) << "DDL=" << ddl;
@@ -153,11 +148,9 @@ printf("    found buffer \n") ;
         mOutputHWErrors.emplace_back(ddl, 1, 0, 0, err); //assign general header errors to non-existing FEE 16
       }
       // Loop over all the channels
-printf("ddl=%d, Nchan=%d \n",ddl,decoder.getDigits().size()) ;      
       for (uint32_t adch : decoder.getDigits()) {
         AddressCharge ac={adch} ;
         unsigned short absId=ac.Address ;
-printf("....address=%d, charge=%d \n",absId,ac.Charge) ;       
         //test bad map
         if(mBadMap->isChannelGood(absId)){
           if(ac.Charge>mZSThreshold){
@@ -173,7 +166,6 @@ printf("....address=%d, charge=%d \n",absId,ac.Charge) ;
     } //RawReader::hasNext
   }
 
-printf("Sort digits\n") ;
   // Loop over BCs, sort digits with increasing digit ID and write to output containers
   mOutputDigits.clear();
   mOutputTriggerRecords.clear();

@@ -31,8 +31,6 @@ RawErrorType_t RawDecoder::decode()
   mDigits.clear() ;
 
   auto payloadwords = mRawReader.getPayload();
-printf("payload size=%d \n",payloadwords.size()) ;
-for(int iii=0; iii<payloadwords.size(); iii++){printf(", %d",payloadwords[iii]) ; }  printf("\n") ;
   if(payloadwords.size()==0){
     mErrors.emplace_back(ddl,0,0,0,kNO_PAYLOAD) ;//add error
     LOG(ERROR)<<"Empty payload for DDL="<<ddl ;
@@ -56,7 +54,6 @@ RawErrorType_t RawDecoder::readRCUTrailer()
 
 RawErrorType_t RawDecoder::readChannels()
 {
-printf("reading channels\n") ;  
   mChannelsInitialized = false;
   auto& header = mRawReader.getRawHeader();
   short ddl = o2::raw::RDHUtils::getFEEID(header); //Current fee/ddl
@@ -66,9 +63,7 @@ printf("reading channels\n") ;
   auto currentWord=payloadwords.rbegin() ;
   while(currentWord!=payloadwords.rend() ){
     SegMarkerWord sw={*currentWord++}; //first get value, then increment
-printf("... Read Serments, sw=%d, nWords=%d \n",sw.mDataWord,sw.nwords) ;    
     if(sw.marker!=2736){ //error
-printf(".... ===>incorrect Segment: %d \n",sw.marker) ;        
       mErrors.emplace_back(ddl,17,2,0,kSEGMENT_HEADER_ERROR) ; //add error for non-existing row
       //try adding this as padWord
       addDigit(sw.mDataWord,ddl) ;
@@ -89,7 +84,6 @@ printf(".........===>error EoE \n") ;
       }
       nEoE++;
       short nEoEwords=ew.nword ;
-printf("..........EoE words=%d,SegW=%d\n",nEoEwords,nSegWords) ;        
       short currentDilogic = ew.dilogic;
       if(ew.row!=currentRow){
 printf("..........===>Row in EoE=%d != expected row %d\n",ew.row,currentRow) ;
@@ -122,13 +116,11 @@ printf("==>RawPad  %d!=%d, dilogicPad=%d != currentDilogic=%d \n",pad.row,curren
         }
         addDigit(pad.mDataWord,ddl) ;
       } //pads in EoE 
-printf("nEoE=%d \n",nEoE) ;      
       if(nEoE%10==0){ // kNDilogic = 10;   ///< Number of dilogic per row 
         if(currentWord!=payloadwords.rend()){ //Read row HEader
           RowMarkerWord rw={*currentWord++} ;
           nSegWords--;
           currentRow--;
-printf("Read Row header: rw=%d, mark=%d =? 13992\n",rw.mDataWord,rw.marker) ;        
           if(rw.marker!=13992){
 printf("   ===>Error in row=%d marker: %d \n",rw.mDataWord, rw.marker) ;            
            mErrors.emplace_back(ddl,currentRow,11,0,kPadAddress) ; //add error and skip word
@@ -168,9 +160,6 @@ void RawDecoder::addDigit(uint32_t w, short ddl){
   short hw=pad.address;
   unsigned short absId; 
   o2::cpv::Geometry::hwaddressToAbsId(ddl, rowPad, dilogicPad, hw, absId) ;
-if(absId>30720){
-printf("ADDRESS: ddl=%d, row=%d, dil=%d, hw=%d, absId=%d \n",ddl, rowPad, dilogicPad, hw, absId) ; 
-}
 
   AddressCharge ac={0} ;
   ac.Address = absId;
