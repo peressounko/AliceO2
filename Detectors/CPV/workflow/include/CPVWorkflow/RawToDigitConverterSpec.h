@@ -61,12 +61,11 @@ class RawToDigitConverterSpec : public framework::Task
   char CheckHWAddress(short ddl, short hwAddress, short& fee);
 
  private:
-  BadChannelMap * mBadMap = nullptr; 
-  CalibParams   * mCalibParams = nullptr; 
-  short mZSThreshold = 0;                                    ///< ZeroSuppression threshold in ADC counts
-  std::vector<o2::cpv::Digit>  mOutputDigits;                 ///< Container with output cells
-  std::vector<o2::cpv::TriggerRecord> mOutputTriggerRecords;  ///< Container with output cells
-  std::vector<o2::cpv::RawDecoderError> mOutputHWErrors;      ///< Errors occured in reading data
+  std::unique_ptr<CalibParams> mCalibParams ;        ///< CPV calibration
+  std::unique_ptr<BadChannelMap> mBadMap ;           ///< BadMap
+  std::vector<Digit>  mOutputDigits;                 ///< Container with output cells
+  std::vector<TriggerRecord> mOutputTriggerRecords;  ///< Container with output cells
+  std::vector<RawDecoderError> mOutputHWErrors;      ///< Errors occured in reading data
 };
 
 /// \brief Creating DataProcessorSpec for the CPV Cell Converter Spec

@@ -39,7 +39,7 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
 
   if (!mCalibParams) {
     if (o2::cpv::CPVSimParams::Instance().mCCDBPath.compare("localtest") == 0) {
-      mCalibParams = new CalibParams(1); // test default calibration
+      mCalibParams = std::make_unique<o2::cpv::CalibParams>(1); // test default calibration
       LOG(INFO) << "No reading calibration from ccdb requested, set default";
     } else {
       LOG(INFO) << "Getting calibration object from ccdb";
@@ -61,7 +61,7 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
 
   if (!mBadMap) {
     if (o2::cpv::CPVSimParams::Instance().mCCDBPath.compare("localtest") == 0) {
-      mBadMap = new BadChannelMap(1); // test default calibration
+      mBadMap = std::make_unique<o2::cpv::BadChannelMap>(1); // test default calibration
       LOG(INFO) << "No reading bad map from ccdb requested, set default";
     } else {
       LOG(INFO) << "Getting bad map object from ccdb";
@@ -153,7 +153,7 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
         unsigned short absId=ac.Address ;
         //test bad map
         if(mBadMap->isChannelGood(absId)){
-          if(ac.Charge>mZSThreshold){
+          if(ac.Charge>o2::cpv::CPVSimParams::Instance().mZSthreshold){
             float amp = mCalibParams->getGain(absId)*ac.Charge;
             currentDigitContainer->emplace_back(absId, amp,-1);
           }
@@ -180,14 +180,17 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
       }
     }
 
-    mOutputTriggerRecords.emplace_back(bc, mOutputDigits.size(), mOutputDigits.size() - prevDigitSize);
+    mOutputTriggerRecords.emplace_back(bc, prevDigitSize, mOutputDigits.size() - prevDigitSize);
+printf("TriggerRecord: size=%d, beg=%d, end=%d\n",mOutputTriggerRecords.size(),mOutputDigits.size(), mOutputDigits.size() - prevDigitSize) ;   
   }
   digitBuffer.clear();
+
 
   LOG(INFO) << "[CPVRawToDigitConverter - run] Writing " << mOutputDigits.size() << " digits ...";
   ctx.outputs().snapshot(o2::framework::Output{"CPV", "DIGITS", 0, o2::framework::Lifetime::Timeframe}, mOutputDigits);
   ctx.outputs().snapshot(o2::framework::Output{"CPV", "DIGITTRIGREC", 0, o2::framework::Lifetime::Timeframe}, mOutputTriggerRecords);
   ctx.outputs().snapshot(o2::framework::Output{"CPV", "RAWHWERRORS", 0, o2::framework::Lifetime::Timeframe}, mOutputHWErrors);
+printf("after snapshot: TRsize=%d \n",mOutputTriggerRecords.size()) ;  
 }
 
 

@@ -42,13 +42,6 @@ class Cluster
   void setEnergy(float e) { mEnergy = e; }
   float getEnergy() const { return mEnergy; }
 
-  void getPosition(float& posX, float& posY, float& posZ) const
-  {
-    posX = mPosX;
-    posX = mPosY;
-    posZ = mPosZ;
-  }
-
   void getLocalPosition(float& posX, float& posZ) const
   {
     posX = mLocalPosX;
@@ -73,9 +66,6 @@ class Cluster
   int mLabel = -1;       ///< Ref to entry in MCTruthContainer with list of labels
   float mLocalPosX = 0.; ///< Center of gravity position in local module coordunates (phi direction)
   float mLocalPosZ = 0.; ///< Center of gravity position in local module coordunates (z direction)
-  float mPosX = 0.;      ///< Center of gravity position in global coordinates
-  float mPosY = 0.;      ///< Center of gravity position in global coordinates
-  float mPosZ = 0.;      ///< Center of gravity position in global coordinates
   float mEnergy = 0.;    ///< full energy of a cluster
 
   ClassDefNV(Cluster, 1);

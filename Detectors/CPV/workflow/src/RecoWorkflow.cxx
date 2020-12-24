@@ -92,16 +92,16 @@ o2::framework::WorkflowSpec getWorkflow(bool propagateMC,
   }
 
   if (inputType == InputType::Digits) {
-    specs.emplace_back(o2::cpv::getPublisherSpec(PublisherConf{
-                                                   "cpv-digit-reader",
-                                                   "o2sim",
-                                                   {"digitbranch", "CPVDigit", "Digit branch"},
-                                                   {"digittrigger", "CPVDigitTrigRecords", "TrigRecords branch"},
-                                                   {"mcbranch", "CPVDigitMCTruth", "MC label branch"},
-                                                   o2::framework::OutputSpec{"CPV", "DIGITS"},
-                                                   o2::framework::OutputSpec{"CPV", "DIGITTRIGREC"},
-                                                   o2::framework::OutputSpec{"CPV", "DIGITSMCTR"}},
-                                                 propagateMC));
+    // specs.emplace_back(o2::cpv::getPublisherSpec(PublisherConf{
+    //                                                "cpv-digit-reader",
+    //                                                "o2sim",
+    //                                                {"digitbranch", "CPVDigit", "Digit branch"},
+    //                                                {"digittrigger", "CPVDigitTrigRecords", "TrigRecords branch"},
+    //                                                {"mcbranch", "CPVDigitMCTruth", "MC label branch"},
+    //                                                o2::framework::OutputSpec{"CPV", "DIGITS"},
+    //                                                o2::framework::OutputSpec{"CPV", "DIGITTRIGREC"},
+    //                                                o2::framework::OutputSpec{"CPV", "DIGITSMCTR"}},
+    //                                              propagateMC));
 
     // if (enableDigitsPrinter) {
     //   specs.emplace_back(o2::cpv::reco_workflow::getDigitsPrinterSpec());
