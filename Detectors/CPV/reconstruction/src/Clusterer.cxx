@@ -45,7 +45,6 @@ void Clusterer::process(gsl::span<const Digit> digits, gsl::span<const TriggerRe
     cluMC->clear();
   }
 
-printf("dtr=%d \n",dtr.size()) ;
   for (const auto& tr : dtr) {
 
     mFirstDigitInEvent = tr.getFirstEntry();

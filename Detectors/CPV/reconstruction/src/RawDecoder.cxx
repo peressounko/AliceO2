@@ -76,7 +76,7 @@ RawErrorType_t RawDecoder::readChannels()
       EoEWord ew ={*currentWord++} ;
       nSegWords--;
       if(ew.checkbit != 1){ //error
-printf(".........===>error EoE \n") ;        
+        LOG(ERROR)<<" error EoE, ddl" << ddl << " row "<< currentRow  ;        
         mErrors.emplace_back(ddl,currentRow,11,0,kEOE_HEADER_ERROR) ; //add error
         //try adding this as padWord
         addDigit(ew.mDataWord,ddl) ;
@@ -86,14 +86,14 @@ printf(".........===>error EoE \n") ;
       short nEoEwords=ew.nword ;
       short currentDilogic = ew.dilogic;
       if(ew.row!=currentRow){
-printf("..........===>Row in EoE=%d != expected row %d\n",ew.row,currentRow) ;
+        LOG(ERROR)<< "Row in EoE=" << ew.row<< " != expected row " << currentRow ;
         mErrors.emplace_back(ddl,currentRow,currentDilogic,0,kEOE_HEADER_ERROR) ;//add error
         //try adding this as padWord
         addDigit(ew.mDataWord,ddl) ;
         continue;
       }
       if(currentDilogic<0 || currentDilogic>10){
-printf("..........===>Dilogic in EoE=%d \n",currentDilogic) ;
+        LOG(ERROR)<< "wrong Dilogic in EoE=" <<  currentDilogic ;
         mErrors.emplace_back(ddl,currentRow,currentDilogic,0,kEOE_HEADER_ERROR) ; //add error
         //try adding this as padWord
         addDigit(ew.mDataWord,ddl) ;
@@ -104,13 +104,13 @@ printf("..........===>Dilogic in EoE=%d \n",currentDilogic) ;
         nEoEwords--;
         nSegWords--;
         if(pad.zero!=0){
-printf("            bad pad \n") ;            
+          LOG(ERROR) << "bad pad, word=" << pad.mDataWord ;            
           mErrors.emplace_back(ddl,currentRow,currentDilogic,49,kPADERROR); //add error and skip word
           continue ;
         }
         //check paw/pad indexes
         if(pad.row!=currentRow || pad.dilogic!=currentDilogic){
-printf("==>RawPad  %d!=%d, dilogicPad=%d != currentDilogic=%d \n",pad.row,currentRow,pad.dilogic,currentDilogic) ;      
+          LOG(ERROR)<< "RawPad "<< pad.row << " != currentRow=" << currentRow <<"dilogicPad=" << pad.dilogic << "!= currentDilogic="<< currentDilogic ;      
           mErrors.emplace_back(ddl,short(pad.row),short(pad.dilogic),short(pad.address),kPadAddress) ; //add error and skip word
           //do not skip, try adding using info from pad
         }
@@ -122,7 +122,7 @@ printf("==>RawPad  %d!=%d, dilogicPad=%d != currentDilogic=%d \n",pad.row,curren
           nSegWords--;
           currentRow--;
           if(rw.marker!=13992){
-printf("   ===>Error in row=%d marker: %d \n",rw.mDataWord, rw.marker) ;            
+           LOG(ERROR)<<"Error in row marker:" <<rw.marker << "row header word="<<rw.mDataWord ;            
            mErrors.emplace_back(ddl,currentRow,11,0,kPadAddress) ; //add error and skip word
            //try adding digit assuming this is pad word
            addDigit(rw.mDataWord,ddl) ;

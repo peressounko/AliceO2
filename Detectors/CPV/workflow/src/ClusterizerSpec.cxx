@@ -35,7 +35,7 @@ void ClusterizerSpec::run(framework::ProcessingContext& ctx)
   // auto digits = ctx.inputs().get<std::vector<o2::cpv::Digit>>("digits");
   auto digitsTR = ctx.inputs().get<std::vector<o2::cpv::TriggerRecord>>("digitTriggerRecords");
 
-printf("CluSpec: digits=%d, TR=%d \n",digits.size(),digitsTR.size()) ;    
+// printf("CluSpec: digits=%d, TR=%d \n",digits.size(),digitsTR.size()) ;    
 
   LOG(DEBUG) << "[CPVClusterizer - run]  Received " << digitsTR.size() << " TR, running clusterizer ...";
   std::unique_ptr<const o2::dataformats::MCTruthContainer<MCCompLabel>> truthcont ;

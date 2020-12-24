@@ -21,8 +21,23 @@ class Geometry;
 /// \class Cluster
 /// \brief Contains CPV cluster parameters
 
+  constexpr float kMinX = -72.32;    // Minimal coordinate in X direction
+  constexpr float kStepX= 0.002;     // digitization step in X direction
+  constexpr float kMinZ = -63.3;     // Minimal coordinate in Z direction
+  constexpr float kStepZ= 0.002;     // digitization step in Z direction
+  constexpr float kStepE = 1.;       // Amplitude digitization step
+
 class Cluster
 {
+
+ union CluStatus{
+   uint8_t mBits;
+   struct {
+   uint8_t multiplicity : 5;  // Pad multiplicty, bits 0-4 
+   uint8_t module       : 2;  // module number, bits 5-6 
+   uint8_t unfolded     : 1;  // unfolded bit, bit 7
+   };
+ };
 
  public:
   Cluster() = default;
@@ -58,6 +73,28 @@ class Cluster
   void setNExMax(char nmax = 1) { mNExMax = nmax; }
   char getNExMax() const { return mNExMax; } // Number of maxima found in cluster in unfolding:
                                              // 0: was no unfolging, -1: unfolding failed
+
+  // raw access for CTF encoding
+  uint16_t getPackedPosX() const { return uint16_t((mLocalPosX-kMinX)/kStepX); }
+  void setPackedPosX(uint16_t v) { mLocalPosX = kMinX+kStepX*v; }
+
+  uint16_t getPackedPosZ() const { return uint16_t((mLocalPosZ-kMinZ)/kStepZ);}
+  void setPackedPosZ(uint16_t v) { mLocalPosZ = kMinZ+kStepZ*v;  }
+
+  uint8_t getPackedEnergy() const { return uint8_t(std::min(255, int(mEnergy/kStepE))); }
+  void setPackedEnergy(uint16_t v) { mEnergy=v*kStepE; }
+
+  uint8_t getPackedClusterStatus() const { CluStatus s={0}; s.multiplicity=mMulDigit; s.module=mModule; s.unfolded=mNExMax>1; return s.mBits; }
+  void setPackedClusterStatus(uint8_t v) { CluStatus s={v}; mMulDigit=s.multiplicity; mModule=s.module; mNExMax=s.unfolded?1:2; }
+
+  void setPacked(uint16_t posX, uint16_t posZ, uint8_t en, uint8_t status)
+  {
+    setPackedPosX(posX) ;
+    setPackedPosZ(posZ) ;
+    setPackedEnergy(en) ;
+    setPackedClusterStatus(status) ;
+  }
+
 
  protected:
   char mMulDigit = 0;    ///< Digit nultiplicity

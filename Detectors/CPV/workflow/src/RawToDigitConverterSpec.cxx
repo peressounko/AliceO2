@@ -181,7 +181,6 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
     }
 
     mOutputTriggerRecords.emplace_back(bc, prevDigitSize, mOutputDigits.size() - prevDigitSize);
-printf("TriggerRecord: size=%d, beg=%d, end=%d\n",mOutputTriggerRecords.size(),mOutputDigits.size(), mOutputDigits.size() - prevDigitSize) ;   
   }
   digitBuffer.clear();
 
@@ -190,7 +189,6 @@ printf("TriggerRecord: size=%d, beg=%d, end=%d\n",mOutputTriggerRecords.size(),m
   ctx.outputs().snapshot(o2::framework::Output{"CPV", "DIGITS", 0, o2::framework::Lifetime::Timeframe}, mOutputDigits);
   ctx.outputs().snapshot(o2::framework::Output{"CPV", "DIGITTRIGREC", 0, o2::framework::Lifetime::Timeframe}, mOutputTriggerRecords);
   ctx.outputs().snapshot(o2::framework::Output{"CPV", "RAWHWERRORS", 0, o2::framework::Lifetime::Timeframe}, mOutputHWErrors);
-printf("after snapshot: TRsize=%d \n",mOutputTriggerRecords.size()) ;  
 }
 
 
