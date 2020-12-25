@@ -8,20 +8,20 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \class CalibParams
+/// \class Pedestals
 /// \brief CCDB container for the full set of CPV calibration coefficients
 /// \author Dmitri Peresunko, RRC Kurchatov institute
 /// \since Aug. 1, 2019
 ///
 ///
 
-#ifndef CPV_CALIBPARAMS_H
-#define CPV_CALIBPARAMS_H
+#ifndef CPV_PEDESTALS_H
+#define CPV_PEDESTALS_H
 
 #include <array>
 #include "TObject.h"
 
-class TH2;
+class TH1;
 
 namespace o2
 {
@@ -29,38 +29,39 @@ namespace o2
 namespace cpv
 {
 
-class CalibParams
+class Pedestals
 {
  public:
   /// \brief Constructor
-  CalibParams() = default;
+  Pedestals() = default;
 
   /// \brief Constructor for tests
-  CalibParams(int test);
+  Pedestals(int test);
 
   /// \brief Destructor
-  ~CalibParams() = default;
+  ~Pedestals() = default;
 
-  /// \brief Get High Gain energy calibration coefficients
+  /// \brief Get pedestal
   /// \param cellID Absolute ID of cell
-  /// \return high gain energy calibration coefficient of the cell
-  float getGain(short cellID) const { return mGainCalib[cellID]; }
+  /// \return pedestal for the cell
+  short getPedestal(short cellID) const { return short(mPedestals.at(cellID)); }
 
-  /// \brief Set High Gain energy calibration coefficient
+  /// \brief Set pedestal
   /// \param cellID Absolute ID of cell
-  /// \param c is the calibration coefficient
-  void setGain(short cellID, float c) { mGainCalib[cellID] = c; }
+  /// \param c is the pedestal (expected to be in range <254)
+  void setPedestal(short cellID, short c) { mPedestals[cellID] = char(c); }
 
-  /// \brief Set High Gain energy calibration coefficients for one module in the form of 2D histogram
-  /// \param 2D(64,56) histogram with calibration coefficients
-  /// \param module number
+
+  /// \brief Set pedestals from 1D histogram with cell absId in x axis
+  /// \param 1D(NCHANNELS) histogram with calibration coefficients
   /// \return Is successful
-  bool setGain(TH2* h, char module);
+  bool setPedestals(TH1* h);
 
  private:
   static constexpr short NCHANNELS = 23040;  ///< Number of channels in 3 modules starting from 0
-  std::array<float, NCHANNELS> mGainCalib;   ///< Container for the gain calibration coefficients
-  ClassDefNV(CalibParams, 1);
+  std::array<char, NCHANNELS> mPedestals;    ///< Container for pedestals
+
+  ClassDefNV(Pedestals, 1);
 };
 
 } // namespace cpv
