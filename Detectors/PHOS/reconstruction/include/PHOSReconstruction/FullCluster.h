@@ -32,6 +32,7 @@ class FullCluster : public Cluster
  public:
   struct CluElement {
     short absId;
+    bool  isHG ;
     float energy;
     float time;
     float localX;
