@@ -61,6 +61,7 @@ class RawToDigitConverterSpec : public framework::Task
   char CheckHWAddress(short ddl, short hwAddress, short& fee);
 
  private:
+  int mDDL=15;
   std::unique_ptr<CalibParams> mCalibParams ;        ///< CPV calibration
   std::unique_ptr<BadChannelMap> mBadMap ;           ///< BadMap
   std::vector<Digit>  mOutputDigits;                 ///< Container with output cells

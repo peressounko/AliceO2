@@ -27,6 +27,7 @@ using namespace o2::cpv::reco_workflow;
 
 void RawToDigitConverterSpec::init(framework::InitContext& ctx)
 {
+  mDDL=ctx.options().get<int>("DDL");
   LOG(DEBUG) << "Initialize converter ";
 }
 
@@ -122,6 +123,7 @@ void RawToDigitConverterSpec::run(framework::ProcessingContext& ctx)
       auto triggerBC = o2::raw::RDHUtils::getTriggerBC(header);
       auto triggerOrbit = o2::raw::RDHUtils::getTriggerOrbit(header);
       auto ddl = o2::raw::RDHUtils::getFEEID(header);
+      ddl-=mDDL ;
 
       o2::InteractionRecord currentIR(triggerBC, triggerOrbit);
       std::shared_ptr<std::vector<o2::cpv::Digit>> currentDigitContainer;
@@ -207,5 +209,7 @@ o2::framework::DataProcessorSpec o2::cpv::reco_workflow::getRawToDigitConverterS
                                           outputs,
                                           o2::framework::adaptFromTask<o2::cpv::reco_workflow::RawToDigitConverterSpec>(),
                                           o2::framework::Options{
-                                            {"pedestal", o2::framework::VariantType::String, "off", {"Analyze as pedestal run on/off"}}}};
+                                            {"pedestal", o2::framework::VariantType::String, "off", {"Analyze as pedestal run on/off"}},
+                                            {"DDL", o2::framework::VariantType::String, "15", {"DDL id to read"}},
+                                          }};
 }
