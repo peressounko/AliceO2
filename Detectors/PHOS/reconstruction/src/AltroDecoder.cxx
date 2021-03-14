@@ -71,7 +71,7 @@ void AltroDecoder::readChannels()
     auto currentword = buffer[currentpos++];
     ChannelHeader header = {currentword};
     if (header.mMark != 1) {
-      if(currentword!=0){
+      if (currentword != 0) {
         LOG(ERROR) << "Channel header mark not found, header word " << currentword;
       }
       continue;
