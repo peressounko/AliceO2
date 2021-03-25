@@ -33,6 +33,7 @@ void customize(std::vector<o2::framework::ConfigParamSpec>& workflowOptions)
     {"disable-mc", o2::framework::VariantType::Bool, false, {"disable sending of MC information"}},
     {"disable-root-input", o2::framework::VariantType::Bool, false, {"disable root-files input reader"}},
     {"disable-root-output", o2::framework::VariantType::Bool, false, {"disable root-files output writer"}},
+    {"fullclu-output", o2::framework::VariantType::Bool, false, {"compact of full (with contr. digits) clusters output"}},
     {"configKeyValues", o2::framework::VariantType::String, "", {"Semicolon separated key=value strings ..."}}};
   std::swap(workflowOptions, options);
 }
@@ -59,8 +60,9 @@ o2::framework::WorkflowSpec defineDataProcessing(o2::framework::ConfigContext co
 
   return o2::phos::reco_workflow::getWorkflow(cfgc.options().get<bool>("disable-root-input"),
                                               cfgc.options().get<bool>("disable-root-output"),
-                                              !cfgc.options().get<bool>("disable-mc"),       //
-                                              cfgc.options().get<std::string>("input-type"), //
-                                              cfgc.options().get<std::string>("output-type") //
+                                              !cfgc.options().get<bool>("disable-mc"),        //
+                                              cfgc.options().get<std::string>("input-type"),  //
+                                              cfgc.options().get<std::string>("output-type"), //
+                                              cfgc.options().get<bool>("fullclu-output")      //
   );
 }
