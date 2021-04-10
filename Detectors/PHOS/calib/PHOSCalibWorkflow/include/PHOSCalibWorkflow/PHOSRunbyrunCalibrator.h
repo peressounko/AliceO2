@@ -74,7 +74,7 @@ class PHOSRunbyrunCalibrator final : public o2::calibration::TimeSlotCalibration
 
  public:
   PHOSRunbyrunCalibrator();
-  ~PHOSRunbyrunCalibrator() final ;
+  ~PHOSRunbyrunCalibrator() final;
 
   bool hasEnoughData(const Slot& slot) const final;
   void initOutput() final;

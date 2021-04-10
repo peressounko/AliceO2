@@ -256,11 +256,10 @@ double PHOSRunbyrunCalibrator::CBRatio(double* x, double* par)
   const double A = TMath::Power((n / TMath::Abs(a)), n) * TMath::Exp(-a * a / 2);
   const double B = n / TMath::Abs(a) - TMath::Abs(a);
   double dx = (x[0] - m) / s;
-  if (dx > -a){
+  if (dx > -a) {
     return par[0] * exp(-dx * dx / 2.) +
            par[3] + par[4] * x[0] + par[5] * x[0] * x[0];
-  }
-  else {
+  } else {
     return par[0] * A * TMath::Power((B - dx), -n) +
            par[3] + par[4] * x[0] + par[5] * x[0] * x[0];
   }
@@ -274,10 +273,9 @@ double PHOSRunbyrunCalibrator::CBSignal(double* x, double* par)
   const double A = TMath::Power((n / TMath::Abs(a)), n) * TMath::Exp(-a * a / 2);
   const double B = n / TMath::Abs(a) - TMath::Abs(a);
   double dx = (x[0] - m) / s;
-  if (dx > -a){
+  if (dx > -a) {
     return par[0] * exp(-dx * dx / 2.) + par[3];
-  }
-  else {
+  } else {
     return par[0] * A * TMath::Power((B - dx), -n) + par[3];
   }
 }

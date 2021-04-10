@@ -225,7 +225,7 @@ bool PHOSEnergyCalibrator::process(uint64_t tf, const std::vector<FullCluster>& 
   auto& slotTF = getSlotForTF(tf);
   slotTF.getContainer()->setRunStartTime(tf);
   slotTF.getContainer()->fill(clusters, cluTR);
-  return true ;
+  return true;
 }
 
 void PHOSEnergyCalibrator::endOfStream()

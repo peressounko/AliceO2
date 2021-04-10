@@ -41,10 +41,10 @@ namespace phos
 union CalibDigit {
   uint32_t mDataWord;
   struct {
-    uint32_t mAddress : 14;   ///< Bits  0 - 13: Hardware address
-    uint32_t mAdcAmp : 10;    ///< Bits 14 - 23: ADC counts
-    uint32_t mHgLg : 1;       ///< Bit  24: LG/HG
-    uint32_t mCluster : 7;    ///< Bits 25-32: index of cluster in event
+    uint32_t mAddress : 14; ///< Bits  0 - 13: Hardware address
+    uint32_t mAdcAmp : 10;  ///< Bits 14 - 23: ADC counts
+    uint32_t mHgLg : 1;     ///< Bit  24: LG/HG
+    uint32_t mCluster : 7;  ///< Bits 25-32: index of cluster in event
   };
 };
 // Event header for energy calibraton. Allow accessing external info with vertex position and collision time
