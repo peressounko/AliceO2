@@ -38,7 +38,7 @@ class CaloRawFitterGS : public CaloRawFitter
   CaloRawFitterGS();
 
   /// \brief Destructor
-  ~CaloRawFitterGS() final = default ;
+  ~CaloRawFitterGS() final = default;
 
   /// \brief Evaluation Amplitude and TOF
   FitStatus evaluate(gsl::span<short unsigned int> signal) final;
