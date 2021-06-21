@@ -176,8 +176,8 @@ void RawToCellConverterSpec::run(framework::ProcessingContext& ctx)
 
       // use the altro decoder to decode the raw data, and extract the RCU trailer
       mDecoder->decode(rawreader, mRawFitter.get(), currentCellContainer, currentTRUContainer);
-      const std::vector<o2::phos::RawReaderError>& errs = mDecoder->hwerrors() ;
-      for(auto a: errs){
+      const std::vector<o2::phos::RawReaderError>& errs = mDecoder->hwerrors();
+      for (auto a : errs) {
         mOutputHWErrors.emplace_back(a);
       }
       // Sort cells according to cell ID

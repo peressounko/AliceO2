@@ -62,12 +62,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
     ChannelHeader header = {currentword};
     if (header.mMark != 1) {
       if (currentword != 0) {
-        LOG(ERROR) << "Channel header mark not found, header word " << currentword; 
+        LOG(ERROR) << "Channel header mark not found, header word " << currentword;
         short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
-        if(fec<0 || fec>13){
-          fec = kGeneralSRUErr ;
+        if (fec < 0 || fec > 13) {
+          fec = kGeneralSRUErr;
         }
-        mOutputHWErrors.emplace_back(mddl, fec, 5);  //5: channel header error
+        mOutputHWErrors.emplace_back(mddl, fec, 5); //5: channel header error
       }
       continue;
     }
@@ -76,10 +76,10 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
     if (numberofwords > payloadend - currentpos) {
       LOG(ERROR) << "Channel payload " << numberofwords << " larger than left in total " << payloadend - currentpos;
       short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
-      if(fec<0 || fec>13){
-        fec = kGeneralSRUErr ;
+      if (fec < 0 || fec > 13) {
+        fec = kGeneralSRUErr;
       }
-      mOutputHWErrors.emplace_back(mddl, fec, 6);  //6: channel payload error
+      mOutputHWErrors.emplace_back(mddl, fec, 6); //6: channel payload error
       continue;
     }
     mBunchwords.clear();
@@ -91,10 +91,10 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
                    << ", Address=0x" << std::hex << header.mHardwareAddress << ", word=0x" << currentword << std::dec;
         currentpos--;
         short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
-        if(fec<0 || fec>13){
-          fec = kGeneralSRUErr ;
+        if (fec < 0 || fec > 13) {
+          fec = kGeneralSRUErr;
         }
-        mOutputHWErrors.emplace_back(mddl, fec, 6);  //6: channel payload error
+        mOutputHWErrors.emplace_back(mddl, fec, 6); //6: channel payload error
         break;
       }
       mBunchwords.push_back((currentword >> 20) & 0x3FF);
@@ -117,10 +117,10 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
     if (!hwToAbsAddress(header.mHardwareAddress, absId, caloFlag)) {
       // do not decode, skip to hext channel
       short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
-      if(fec<0 || fec>13){
-        fec = kGeneralSRUErr ;
+      if (fec < 0 || fec > 13) {
+        fec = kGeneralSRUErr;
       }
-      mOutputHWErrors.emplace_back(mddl, fec, 7);  //7: wrong hw address
+      mOutputHWErrors.emplace_back(mddl, fec, 7); //7: wrong hw address
       continue;
     }
 
@@ -135,12 +135,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
         CaloRawFitter::FitStatus fitResult = rawFitter->evaluate(gsl::span<uint16_t>(&mBunchwords[currentsample + 2], std::min((unsigned long)bunchlength, mBunchwords.size() - currentsample - 2)));
         currentsample += bunchlength + 2;
         //set output cell
-        if (fitResult == CaloRawFitter::FitStatus::kNoTime) {  //Time evaluation error occured: should we add this err to list?
-          short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
-          if(fec<0 || fec>13){
-            fec = kGeneralSRUErr ;
+        if (fitResult == CaloRawFitter::FitStatus::kNoTime) { //Time evaluation error occured: should we add this err to list?
+          short fec = header.mHardwareAddress >> 7 & 0xf;     //try to extract FEE number from header
+          if (fec < 0 || fec > 13) {
+            fec = kGeneralSRUErr;
           }
-          mOutputHWErrors.emplace_back(mddl, fec, 8);  //8: time calculation failed
+          mOutputHWErrors.emplace_back(mddl, fec, 8); //8: time calculation failed
         }
         if (!rawFitter->isOverflow()) { //Overflow is will show wrong chi2
           short chiAddr = absId;
@@ -213,7 +213,7 @@ bool AltroDecoder::hwToAbsAddress(short hwAddr, short& absId, Mapping::CaloFlag&
   } else {
     if (fec < 0 || fec > 15) {
       e2 = 2;
-      fec = kGeneralSRUErr ;
+      fec = kGeneralSRUErr;
     } else {
       if (fec != 0 && (chip < 0 || chip > 4 || chip == 1)) { //Do not check for TRU (fec=0)
         e2 = 3;
@@ -239,10 +239,10 @@ void AltroDecoder::readTRUDigits(short absId, int payloadSize, std::vector<o2::p
 {
   int currentsample = 0;
   while (currentsample < payloadSize) {
-    int bunchlength = mBunchwords[currentsample] - 2; // remove words for bunchlength and starttime
-    if(bunchlength<0){ //corrupted sample: add error and ignore the reast of bunchwords
+    int bunchlength = mBunchwords[currentsample] - 2;                           // remove words for bunchlength and starttime
+    if (bunchlength < 0) {                                                      //corrupted sample: add error and ignore the reast of bunchwords
       mOutputHWErrors.emplace_back(mddl, kGeneralTRUErr, static_cast<char>(1)); // 1: wrong TRU header
-      return ;
+      return;
     }
     int timeBin = mBunchwords[currentsample + 1];
     int istart = currentsample + 2;
@@ -276,9 +276,9 @@ void AltroDecoder::readTRUFlags(short hwAddress, int payloadSize)
   while (currentsample < payloadSize) {
     int bunchlength = mBunchwords[currentsample] - 2; // remove words for bunchlength and starttime
     int timeBin = mBunchwords[currentsample + 1];
-    if(bunchlength<0){ //corrupted sample: add error and ignore the reast of bunchwords
+    if (bunchlength < 0) {                                                      //corrupted sample: add error and ignore the reast of bunchwords
       mOutputHWErrors.emplace_back(mddl, kGeneralTRUErr, static_cast<char>(1)); // 1: wrong TRU header
-      return ;
+      return;
     }
     int istart = currentsample + 2;
     int iend = std::min((unsigned long)bunchlength, mBunchwords.size() - currentsample - 2);

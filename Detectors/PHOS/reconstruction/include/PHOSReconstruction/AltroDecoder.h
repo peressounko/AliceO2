@@ -104,7 +104,7 @@ class AltroDecoder
                                         std::vector<o2::phos::Cell>& truContainer);
 
   /// \brief Get list of hw errors found in decoding
-  const std::vector<o2::phos::RawReaderError>& hwerrors(){ return mOutputHWErrors; }
+  const std::vector<o2::phos::RawReaderError>& hwerrors() { return mOutputHWErrors; }
 
   /// \brief Get reference to the RCU trailer object
   /// \return reference to the RCU trailers vector
@@ -122,9 +122,8 @@ class AltroDecoder
   void setCombineHGLG(bool a) { mCombineGHLG = a; }
 
  private:
-
-  static constexpr int kGeneralSRUErr=15;                  ///< Non-existing FEE card to store general SRU errors 
-  static constexpr int kGeneralTRUErr=16;                  ///< Non-existing FEE card to store general TRU errors 
+  static constexpr int kGeneralSRUErr = 15; ///< Non-existing FEE card to store general SRU errors
+  static constexpr int kGeneralTRUErr = 16; ///< Non-existing FEE card to store general TRU errors
   //check and convert HW address to absId and caloFlag
   bool hwToAbsAddress(short hwaddress, short& absId, Mapping::CaloFlag& caloFlag);
   //read trigger digits
