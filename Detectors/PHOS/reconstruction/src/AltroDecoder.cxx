@@ -67,13 +67,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
         short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
         short branch = header.mHardwareAddress >> 11 & 0x1;
         if (branch < 0 || branch > 1) {
-          fec=kGeneralTRUErr+kGeneralSRUErr ;
-        }
-        else{
+          fec = kGeneralTRUErr + kGeneralSRUErr;
+        } else {
           if (fec < 0 || fec > 13) {
             fec = kGeneralSRUErr;
           }
-          fec+=kGeneralTRUErr*branch ;
+          fec += kGeneralTRUErr * branch;
         }
         mOutputHWErrors.emplace_back(mddl, fec, 5); //5: channel header error
       }
@@ -86,13 +85,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
       short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
       short branch = header.mHardwareAddress >> 11 & 0x1;
       if (branch < 0 || branch > 1) {
-        fec=kGeneralTRUErr+kGeneralSRUErr ;
-      }
-      else{
+        fec = kGeneralTRUErr + kGeneralSRUErr;
+      } else {
         if (fec < 0 || fec > 13) {
           fec = kGeneralSRUErr;
         }
-        fec+=kGeneralTRUErr*branch ;
+        fec += kGeneralTRUErr * branch;
       }
       mOutputHWErrors.emplace_back(mddl, fec, 6); //6: channel payload error
       continue;
@@ -108,13 +106,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
         short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
         short branch = header.mHardwareAddress >> 11 & 0x1;
         if (branch < 0 || branch > 1) {
-          fec=kGeneralTRUErr+kGeneralSRUErr ;
-        }
-        else{
+          fec = kGeneralTRUErr + kGeneralSRUErr;
+        } else {
           if (fec < 0 || fec > 13) {
             fec = kGeneralSRUErr;
           }
-          fec+=kGeneralTRUErr*branch ;
+          fec += kGeneralTRUErr * branch;
         }
         mOutputHWErrors.emplace_back(mddl, fec, 6); //6: channel payload error
         break;
@@ -141,13 +138,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
       short fec = header.mHardwareAddress >> 7 & 0xf; //try to extract FEE number from header
       short branch = header.mHardwareAddress >> 11 & 0x1;
       if (branch < 0 || branch > 1) {
-        fec=kGeneralTRUErr+kGeneralSRUErr ;
-      }
-      else{
+        fec = kGeneralTRUErr + kGeneralSRUErr;
+      } else {
         if (fec < 0 || fec > 13) {
           fec = kGeneralSRUErr;
         }
-        fec+=kGeneralTRUErr*branch ;
+        fec += kGeneralTRUErr * branch;
       }
       mOutputHWErrors.emplace_back(mddl, fec, 7); //7: wrong hw address
       continue;
@@ -168,13 +164,12 @@ void AltroDecoder::readChannels(const std::vector<uint32_t>& buffer, CaloRawFitt
           short fec = header.mHardwareAddress >> 7 & 0xf;     //try to extract FEE number from header
           short branch = header.mHardwareAddress >> 11 & 0x1;
           if (branch < 0 || branch > 1) {
-            fec=kGeneralTRUErr+kGeneralSRUErr ;
-          }
-          else{
+            fec = kGeneralTRUErr + kGeneralSRUErr;
+          } else {
             if (fec < 0 || fec > 13) {
               fec = kGeneralSRUErr;
             }
-            fec+=kGeneralTRUErr*branch ;
+            fec += kGeneralTRUErr * branch;
           }
           mOutputHWErrors.emplace_back(mddl, fec, 8); //8: time calculation failed
         }
@@ -246,16 +241,16 @@ bool AltroDecoder::hwToAbsAddress(short hwAddr, short& absId, Mapping::CaloFlag&
   short e2 = 0;
   if (branch < 0 || branch > 1) {
     e2 = 1;
-    mOutputHWErrors.emplace_back(mddl, kGeneralTRUErr+kGeneralSRUErr, 1);
+    mOutputHWErrors.emplace_back(mddl, kGeneralTRUErr + kGeneralSRUErr, 1);
   } else {
     if (fec < 0 || fec > 15) {
       e2 = 2;
       fec = kGeneralSRUErr;
-      mOutputHWErrors.emplace_back(mddl, fec + branch*kGeneralTRUErr, 2);
+      mOutputHWErrors.emplace_back(mddl, fec + branch * kGeneralTRUErr, 2);
     } else {
       if (fec != 0 && (chip < 0 || chip > 4 || chip == 1)) { //Do not check for TRU (fec=0)
         e2 = 3;
-        mOutputHWErrors.emplace_back(mddl, fec + branch*kGeneralTRUErr, 3);
+        mOutputHWErrors.emplace_back(mddl, fec + branch * kGeneralTRUErr, 3);
       }
     }
   }
@@ -267,7 +262,7 @@ bool AltroDecoder::hwToAbsAddress(short hwAddr, short& absId, Mapping::CaloFlag&
   //correct hw address, try to convert
   Mapping::ErrorStatus s = Mapping::Instance()->hwToAbsId(mddl, hwAddr, absId, caloFlag);
   if (s != Mapping::ErrorStatus::kOK) {
-    mOutputHWErrors.emplace_back(mddl, branch*kGeneralTRUErr+ kGeneralSRUErr, 4); //4: error in mapping
+    mOutputHWErrors.emplace_back(mddl, branch * kGeneralTRUErr + kGeneralSRUErr, 4); //4: error in mapping
     return false;
   }
   return true;
