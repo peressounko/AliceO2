@@ -63,7 +63,7 @@ RawErrorType_t RawDecoder::readChannels()
       }
       skipUntilNextHeader = false;
       currentBC = header.bc();
-      currentOrbit = header.orbit() ;
+      currentOrbit = header.orbit();
       wordCountFromLastHeader = 0;
       nDigitsAddedFromLastHeader = 0;
       // // There is no requirement that event orbit be equal to HBF orbit.
